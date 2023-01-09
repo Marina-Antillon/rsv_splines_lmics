@@ -106,6 +106,6 @@ A single run of the code takes about 60 minutes in a MacBook Pro (Mid-2014 model
 
 # Troubleshooting
 
-*Issues with the renv repository:* If there is an issue with the repository, try typing renv:: rinit() and when prompted type the number 1, for Restored the project from lockfile.
+**Issues with the renv repository:** If there is an issue with the repository, try typing renv:: rinit() and when prompted type the number 1, for Restored the project from lockfile.
 
-*Adding a package to the renv library:* just use the command install.packages(). Note that doing this won't install the package for use with other projects. Then update the lockfile by typing renv::snapshot().
+**Adding a package to the renv library:** just use the command install.packages(). Note that doing this won't install the package for use with other projects. Then update the lockfile by typing renv::snapshot().
