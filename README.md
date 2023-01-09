@@ -28,7 +28,7 @@ In the current study, we leverage the RSV data collected on cases, hospitalizati
 
 ## Analysis with generalized semi-parametric mixed effects models
 
-** Link to the package descriptions ** mgcv and any other
+Random effects with `mgcv`
 https://stat.ethz.ch/R-manual/R-devel/library/mgcv/html/random.effects.html
 
 ---
