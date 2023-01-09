@@ -44,7 +44,9 @@ The analysis is broadly defined in four parts, each of these parts is executed i
 ## File structure, output, and dependencies
 
 **epicode00: MASTER. Run the simulations**
+
 code00a_master: runs the code overall. Calls all other code in the code directory to make the results in out_figs and out_sims. 
+
 code00b_config: functions and libraries necessary.
 
 **epicode01 community-based incidence**
@@ -105,4 +107,5 @@ A single run of the code takes about 60 minutes in a MacBook Pro (Mid-2014 model
 # Troubleshooting
 
 *Issues with the renv repository:* If there is an issue with the repository, try typing renv:: rinit() and when prompted type the number 1, for Restored the project from lockfile.
+
 *Adding a package to the renv library:* just use the command install.packages(). Note that doing this won't install the package for use with other projects. Then update the lockfile by typing renv::snapshot().
