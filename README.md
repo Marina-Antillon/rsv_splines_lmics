@@ -36,10 +36,10 @@ https://stat.ethz.ch/R-manual/R-devel/library/mgcv/html/random.effects.html
 # Brief description
 
 The analysis is broadly defined in four parts, each of these parts is executed in various R code files:  
-I. Master file and config file that are useful for all parts of the analysis (prefix: epicode00a and epicode00b). 
-II. Estimating the splines for each outcome: community-based incidence, hospitalization probability, hospital-based incidence, hCFR. 
-III. Summarizing the splines and determining the window of protection needed.
-IV. Burden re-estimations and summaries.
+- I. Master file and config file that are useful for all parts of the analysis (prefix: epicode00a and epicode00b). 
+- II. Estimating the splines for each outcome: community-based incidence, hospitalization probability, hospital-based incidence, hCFR. 
+- III. Summarizing the splines and determining the window of protection needed.
+- IV. Burden re-estimations and summaries.
 
 ## File structure, output, and dependencies
 
