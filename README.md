@@ -7,14 +7,14 @@ Administered by Marina Antillon, PhD.
 
 Collaborating centers:
 
-Center for Health Economics Research and Modeling of Infectious Diseases (CHERMID) 
-University of Antwerp
-2610 Antwerp, Belgium
+Center for Health Economics Research and Modeling of Infectious Diseases (CHERMID)  
+University of Antwerp  
+2610 Antwerp, Belgium  
 
-Department of Epidemiology and Public Health 
-Swiss Tropical and Public Health (Swiss TPH) Institute  
-(An affiliated institute of the University of Basel)  
-4123 Allschwil, Switzerland
+Department of Epidemiology and Public Health   
+Swiss Tropical and Public Health (Swiss TPH) Institute   
+(An affiliated institute of the University of Basel)   
+4123 Allschwil, Switzerland  
 
 COPYRIGHT 2022, Swiss TPH and University of Antwerp
 
