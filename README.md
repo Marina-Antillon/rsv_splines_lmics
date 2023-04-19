@@ -94,7 +94,7 @@ The tools for the analysis are coded in R. While we would highly recommend using
 
 Some of the results tables for the project are produced automatically with the code in the project. This is done via the knitr and kableExtra packages. See the help links later in this document for more information.
 
-A single run of the code takes about 60 minutes in a MacBook Pro (Mid-2014 model) with a 3 GHz Intel Core i7 processor and 16 GB of RAM. 
+A single run of the code takes about 60 minutes in a MacBook Air (M1 chip, 2020 model) with 16 GB of RAM. 
 
 # Installation to-do list (all free)
 - [R](https://www.r-project.org) (required)
