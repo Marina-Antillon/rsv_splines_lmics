@@ -98,7 +98,7 @@ A single run of the code takes about 60 minutes in a MacBook Pro (Mid-2014 model
 
 # Installation to-do list (all free)
 - [R](https://www.r-project.org) (required)
-- [Packrat](https://rstudio.github.io/packrat/) (packages installed for R; required) **HERE: REPLACE with renv**
+- [renv](https://rstudio.github.io/renv/index.html) (packages installed for R; required)
 - [RStudio](https://www.rstudio.com/) (highly recommended though not required; it integrates well with the other management tools used in the project. The free version is more than enough.)
 - Latex engine (not required, though some documentation created automatically won't run). See [here](https://support.rstudio.com/hc/en-us/articles/200532257-Customizing-LaTeX-Options) for the recommended engines.
 
