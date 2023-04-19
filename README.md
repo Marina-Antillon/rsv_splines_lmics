@@ -1,4 +1,4 @@
-The burden of respiratory syncytial virus in infants of low- and middle-income countries: A semi-parametric, meta-regression approach
+The age profile of respiratory syncytial virus burden in pre-school children of low- and middle-income countries: A semi-parametric, meta-regression approach
 =======================
 
 On behalf of the Respiratory Syncytial Virus in Europe ([RESC-EU](https://resc-eu.org))  
