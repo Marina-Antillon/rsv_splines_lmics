@@ -33,7 +33,7 @@ for (i in 1:52){
 data_long = data_list[[41]]
 data_long = data_long[is.na(data_long$Cases),]
 
-for (i in 1:52){
+for (i in c(1:52)){
   data_long = rbind.fill(data_long, data_list[[i]])
 }
 
@@ -130,8 +130,8 @@ data_long_min_all = data_long_min # to graph the studies that were excluded from
 data_long_min = data_long_min[data_long_min$study_no %in% as.numeric(names(table(data_long_min$study_no)))[table(data_long_min$study_no)>2],]
 data_long_min_all = data_long_min_all[data_long_min_all$study_no %in% as.numeric(names(table(data_long_min_all$study_no)))[table(data_long_min_all$study_no)<3],]
 
-write.csv(data_long_min, paste(plotpre_out, "/data_long_hospincsev_train.csv"))
-write.csv(data_long_min_all, paste(plotpre_out, "./data_long_hospincsev_val.csv"))
+write.csv(data_long_min, "./data_long_hospincsev_train.csv")
+write.csv(data_long_min_all, "./data_long_hospincsev_val.csv")
 
 # data_long_min$study_no = as.numeric(as.factor(data_long_min$study_no))
 data_long_min$study_no = factor(as.numeric(as.factor(data_long_min$study_no)))
@@ -166,14 +166,23 @@ b_gamm = gamm4(cbind(Cases_sev, Cases)~s(log(midpoint), k=3, bs=bs_type) +
                random=~(1|study_no), data=data_long_min, 
                family=binomial(link="logit"), REML=T)
 
+# check_overdispersion(v_gamm$mer) # overdispersion not detected
+# gam.check(v_gamm$gam)
+
 v_gamm = gamm4(cbind(Cases_sev, Cases)~s(log(midpoint), k=3, bs=bs_type, by=Economic_Setting) + Economic_Setting + 
                  t2(log(midpoint), study_no, k=5, bs=c(bs_type, 're'), by=dummy),
-               random=~(1|study_no), data=data_long_min, family=binomial(link="logit"), REML=T)
+               random=~(1|study_no), data=data_long_min, family=binomial(link="logit"))
+
+# check_overdispersion(v_gamm$mer) # overdispersion not detected
+# gam.check(v_gamm$gam)
 
 v1_gamm = gamm4(cbind(Cases_sev, Cases)~s(log(midpoint), k=3, bs=bs_type, by=Economic_Setting) + Economic_Setting + 
                   t2(log(midpoint), study_no, k=5, bs=c(bs_type, 're'), by=Economic_Setting),
                 random=~(Economic_Setting|study_no), data=data_long_min, family=binomial(link="logit"), REML=T,
                 control=glmerControl(optCtrl = list(maxfun=2e4)))
+
+# check_overdispersion(v1_gamm$mer) # overdispersion not detected
+# gam.check(v1_gamm$gam)
 
 modcomp = anova(b_gamm$mer, v_gamm$mer, v1_gamm$mer)
 write.csv(modcomp, file=paste(plotpre_out, "epicode12b_hosp_prob_sev/modcomp_sev.csv", sep=""))
@@ -280,7 +289,6 @@ dev.off()
 #*******************************
 
 load(file=paste(plotpre_out, "epicode12b_hosp_prob_sev/hospinc_sev_global_predictions.Rdata", sep=""))
-
 inc_ribbons_global = data.frame(t(apply(allpred, 1, quantile, c(0.5, 0.025, 0.975))))
 colnames(inc_ribbons_global) = c("est", "lowci", "hici")
 inc_ribbons_global$mean = apply(allpred, 1, mean)
@@ -331,8 +339,8 @@ data_long_min$study_no = factor(as.numeric(as.factor(data_long_min$study_no)))
 
 table(data_long_min$study_no) # make sure each study has at least 3 observations
 
-write.csv(data_long_min, paste(plotpre_out, "/data_long_hospincVsev_train.csv"))
-write.csv(data_long_min_all, paste(plotpre_out, "./data_long_hospincVsev_val.csv"))
+write.csv(data_long_min, "./data_long_hospincVsev_train.csv")
+write.csv(data_long_min_all, "./data_long_hospincVsev_val.csv")
 
 # assign a value for midpoints
 if (midpt_sensitivity == T){
@@ -366,6 +374,10 @@ data_long_min$dummy=1
 b_gamm = gamm4(cbind(Cases_vsev, Cases)~s(log(midpoint), k=3, bs=bs_type) + 
                  t2(log(midpoint), study_no, k=5, bs=c(bs_type, 're'), by=dummy),
                random=~(1|study_no), data=data_long_min, family=binomial(link="logit"), REML=T)
+
+as.numeric(logLik(b_gamm$mer))
+check_overdispersion(b_gamm$mer) # overdispersion not detected
+gam.check(b_gamm$gam)
 
 v_gamm = gamm4(cbind(Cases_vsev, Cases)~s(log(midpoint), k=3, bs=bs_type, by=Economic_Setting) + Economic_Setting + 
                  t2(log(midpoint), study_no, k=5, bs=c(bs_type, 're'), by=dummy),
@@ -481,7 +493,6 @@ dev.off()
 #*******************************
 
 load(file=paste(plotpre_out, "epicode12b_hosp_prob_sev/hospinc_vsev_global_predictions.Rdata", sep=""))
-
 inc_ribbons_global = data.frame(t(apply(allpred, 1, quantile, c(0.5, 0.025, 0.975))))
 colnames(inc_ribbons_global) = c("est", "lowci", "hici")
 inc_ribbons_global$mean = apply(allpred, 1, mean)

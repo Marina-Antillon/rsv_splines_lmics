@@ -33,7 +33,7 @@ for (i in 1:22){
 data_long = data_list[[7]]
 data_long = data_long[is.na(data_long$Cases),]
 
-for (i in 1:22){
+for (i in c(1:22)){
 data_long = rbind.fill(data_long, data_list[[i]])
 }
 
@@ -142,14 +142,14 @@ if (midpt_sensitivity == T){
   }
 }
 
-jpeg(filename = paste(plotpre_fig, "epicode01b_comm_prob_sev/forest_sev.jpeg", sep=""), 
+jpeg(filename = paste(plotpre_fig, "epicode03_sev_inc/forest_sev.jpeg", sep=""), 
      width = 8, height = 28, units = "in", quality = 100, bg = "white", res = 600)
 data_long_min_forest = data_long_min[data_long_min$Cases>0,]
 forest(metaprop(Cases_sev, Cases, studlab=midpoint, byvar=paste(Author, ", ", Year, sep=""), data=data_long_min_forest, 
                 comb.random=F, print.byvar=F))
 dev.off()
 
-jpeg(filename = paste(plotpre_fig, "epicode01b_comm_prob_sev/forest_sevB.jpeg", sep=""), 
+jpeg(filename = paste(plotpre_fig, "epicode03_sev_inc/forest_sevB.jpeg", sep=""), 
      width = 8, height = 28, units = "in", quality = 100, bg = "white", res = 600)
 data_long_min_forest = data_long_min[data_long_min$Cases>0,]
 forest(metaprop(Cases_sev, Cases, studlab=paste(Author, ", ", Year, sep=""), byvar=factor(midpoint), data=data_long_min_forest, 
@@ -163,17 +163,26 @@ b_gamm = gamm4(cbind(Cases_sev, Cases)~s(log(midpoint), k=-1, bs=bs_type) +
                  t2(log(midpoint), study_no, bs=c(bs_type, 're'), by=dummy),
                random=~(1|study_no), data=data_long_min, family=binomial(link="logit"), REML=T)
 
+check_overdispersion(b_gamm$mer) 
+gam.check(b_gamm$gam)
+
 v_gamm = gamm4(cbind(Cases_sev, Cases)~s(log(midpoint), k=-1, bs=bs_type, by=Economic_Setting) + Economic_Setting + 
                  t2(log(midpoint), study_no, bs=c(bs_type, 're'), by=dummy),
                random=~(1|study_no), data=data_long_min, family=binomial(link="logit"), REML=T)
+
+check_overdispersion(v_gamm$mer) 
+gam.check(v_gamm$gam)
 
 v1_gamm = gamm4(cbind(Cases_sev, Cases)~s(log(midpoint), k=-1, bs=bs_type, by=Economic_Setting) + Economic_Setting + 
                   t2(log(midpoint), study_no, bs=c(bs_type, 're'), by=Economic_Setting),
                 random=~(Economic_Setting|study_no), data=data_long_min, family=binomial(link="logit"), REML=T,
                 control=glmerControl(optCtrl = list(maxfun=2e4)))
 
+check_overdispersion(v1_gamm$mer) 
+gam.check(v1_gamm$gam)
+
 modcomp = anova(v_gamm$mer, b_gamm$mer, v1_gamm$mer)
-write.csv(modcomp, file=paste(plotpre_out, "epicode01b_comm_prob_sev/modcomp_sev.csv", sep=""))
+write.csv(modcomp, file=paste(plotpre_out, "epicode03_sev_inc/modcomp_sev.csv", sep=""))
 
 newpred=data.frame(midpoint=seq(0.1, 60, 0.1), Cases=100, study_no=3, dummy=0)
 bpred = data.frame(predict.gam(b_gamm$gam, newdata=newpred, se.fit=T))
@@ -209,8 +218,8 @@ allpred_df_global = data.frame(pred=as.vector(allpred[seq(5, 595, 10),]),
                                mos=rep(seq(0.5, 59.5, 1), times=dim(allpred)[2]),
                                iter=rep(1:dim(allpred)[2], each=length(seq(0.5, 59.5, 1))))
 
-write.csv(allpred_df_global, file=paste(plotpre_out, "epicode01b_comm_prob_sev/inc_sev_global_predictions.csv", sep=""))
-save(allpred_df_global, allpred, file=paste(plotpre_out, "epicode01b_comm_prob_sev/inc_sev_global_predictions.Rdata", sep=""))
+write.csv(allpred_df_global, file=paste(plotpre_out, "epicode03_sev_inc/inc_sev_global_predictions.csv", sep=""))
+save(allpred_df_global, allpred, file=paste(plotpre_out, "epicode03_sev_inc/inc_sev_global_predictions.Rdata", sep=""))
 
 #*******************************
 # Plot, Global estimates -------
@@ -327,8 +336,8 @@ data_long_min_all = data_long_min # to graph the studies that were excluded from
 data_long_min = data_long_min[data_long_min$study_no %in% as.numeric(names(table(data_long_min$study_no)))[table(data_long_min$study_no)>2],]
 data_long_min_all = data_long_min_all[data_long_min_all$study_no %in% as.numeric(names(table(data_long_min_all$study_no)))[table(data_long_min_all$study_no)<3],]
 
-# write.csv(data_long_min, "./data_long_incVsev_train.csv")
-# write.csv(data_long_min_all, "./data_long_incVsev_val.csv")
+write.csv(data_long_min, paste(plotpre_out,"/data_long_incVsev_train.csv"))
+write.csv(data_long_min_all, paste(plotpre_out,"/data_long_incVsev_val.csv"))
 
 # data_long_min$study_no = as.numeric(as.factor(data_long_min$study_no))
 data_long_min$study_no = factor(as.numeric(as.factor(data_long_min$study_no)))
@@ -348,14 +357,14 @@ if (midpt_sensitivity == T){
   }
 }
 
-jpeg(filename = paste(plotpre_fig, "epicode01b_comm_prob_sev/forest_vsev.jpeg", sep=""), 
+jpeg(filename = paste(plotpre_fig, "epicode03_sev_inc/forest_vsev.jpeg", sep=""), 
      width = 8, height = 9.5, units = "in", quality = 100, bg = "white", res = 600)
 data_long_min_forest = data_long_min[data_long_min$Cases_sev>0,]
 forest(metaprop(Cases_vsev, Cases_sev, studlab=midpoint, byvar=paste(Author, ", ", Year, sep=""), data=data_long_min_forest, 
                 comb.random=F, print.byvar=F))
 dev.off()
 
-jpeg(filename = paste(plotpre_fig, "epicode01b_comm_prob_sev/forest_vsev_prcases.jpeg", sep=""), 
+jpeg(filename = paste(plotpre_fig, "epicode03_sev_inc/forest_vsev_prcases.jpeg", sep=""), 
      width = 8, height = 9.5, units = "in", quality = 100, bg = "white", res = 600)
 data_long_min_forest = data_long_min[data_long_min$Cases>0,]
 forest(metaprop(Cases_vsev, Cases, studlab=midpoint, byvar=paste(Author, ", ", Year, sep=""), data=data_long_min_forest, 
@@ -369,6 +378,7 @@ b_gamm = gamm4(cbind(Cases_vsev, Cases_sev)~s(log(midpoint), k=5, bs=bs_type) +
                  t2(log(midpoint), study_no, k=3, bs=c(bs_type, 're'), by=dummy),
                random=~(1|study_no), data=data_long_min, family=binomial(link="logit"), REML=T)
 
+# These models are not even possible: (not enough of LMIC and UMIC)
 # v_gamm = gamm4(cbind(Cases_vsev, Cases_sev)~s(log(midpoint), k=3, bs=bs_type, by=Economic_Setting) + Economic_Setting +
 #                  t2(log(midpoint), study_no, k=3, bs=c(bs_type, 're'), by=dummy),
 #                random=~(1|study_no), data=data_long_min, family=binomial(link="logit"), REML=T)
@@ -415,8 +425,8 @@ allpred_df_global = data.frame(pred=as.vector(allpred[seq(5, 595, 10),]),
                                mos=rep(seq(0.5, 59.5, 1), times=dim(allpred)[2]),
                                iter=rep(1:dim(allpred)[2], each=length(seq(0.5, 59.5, 1))))
 
-write.csv(allpred_df_global, file=paste(plotpre_out, "epicode01b_comm_prob_sev/inc_vsev_global_predictions.csv", sep=""))
-save(allpred_df_global, allpred, file=paste(plotpre_out, "epicode01b_comm_prob_sev/inc_vsev_global_predictions.Rdata", sep=""))
+write.csv(allpred_df_global, file=paste(plotpre_out, "epicode03_sev_inc/inc_vsev_global_predictions.csv", sep=""))
+save(allpred_df_global, allpred, file=paste(plotpre_out, "epicode03_sev_inc/inc_vsev_global_predictions.Rdata", sep=""))
 
 #*******************************
 # Plot, Global estimates -------
@@ -455,6 +465,7 @@ dev.off()
 #*******************************
 
 load(file=paste(plotpre_out, "epicode01b_comm_prob_sev/inc_vsev_global_predictions.Rdata", sep=""))
+
 inc_ribbons_global = data.frame(t(apply(allpred, 1, quantile, c(0.5, 0.025, 0.975))))
 colnames(inc_ribbons_global) = c("est", "lowci", "hici")
 inc_ribbons_global$mean = apply(allpred, 1, mean)

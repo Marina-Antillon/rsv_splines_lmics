@@ -37,14 +37,14 @@ inc_sp[,,"UMIC"] = allpred_umic/1000
 # load(paste(plotpre_out, "epicode12_hosp_prob/hosp_global_predictions.RData", sep=""))
 # hosp_prob1_sp[,,"All"] = hosp_prob1_sp[,,"LIC"] = hosp_prob1_sp[,,"LMIC"] = hosp_prob1_sp[,,"UMIC"] = allpred
 
-load(paste(plotpre_out, "epicode21_cfr/cfr_global_predictions.RData", sep=""))
+load(paste(plotpre_out, "epicode22_cfr/cfr_global_predictions.RData", sep=""))
 cfr_sp[,,"All"] = cfr_sp[,,"LIC"] = cfr_sp[,,"LMIC"] = cfr_sp[,,"UMIC"] = allpred
 
 # divide hosp inc by 1000
 load(paste(plotpre_out_hinc, "epicode12a_hospinc/hospinc_global_predictions.RData", sep=""))
-# load(paste(plotpre_out_hinc, "epicode12a_hospinc/hospinc_lic_predictions.RData", sep=""))
-# load(paste(plotpre_out_hinc, "epicode12a_hospinc/hospinc_lmic_predictions.RData", sep=""))
-# load(paste(plotpre_out_hinc, "epicode12a_hospinc/hospinc_umic_predictions.RData", sep=""))
+# load(paste(plotpre_out_hinc, "epicode14_hospinc/hospinc_lic_predictions.RData", sep=""))
+# load(paste(plotpre_out_hinc, "epicode14_hospinc/hospinc_lmic_predictions.RData", sep=""))
+# load(paste(plotpre_out_hinc, "epicode14_hospinc/hospinc_umic_predictions.RData", sep=""))
 hospinc_sp[,,"All"] = hospinc_sp[,,"LIC"] = hospinc_sp[,,"LMIC"] = hospinc_sp[,,"UMIC"] = allpred/1000
 
 # hospinc_sp[,,"All"] = allpred/1000
@@ -56,10 +56,6 @@ hospinc_sp[,,"All"] = hospinc_sp[,,"LIC"] = hospinc_sp[,,"LMIC"] = hospinc_sp[,,
 # the one without the Homaira data
 load(paste(plotpre_out, "epicode11_hosp_prob/hosp_global_predictions.Rdata", sep=""))
 hosp_prob2_sp[,,"All"] = hosp_prob2_sp[,,"LIC"] = hosp_prob2_sp[,,"LMIC"] = hosp_prob2_sp[,,"UMIC"] = allpred
-
-# the one with *only* the Nokes data
-# load(paste(plotpre_out, "epicode12_hosp_prob/hosp_NOKES_predictions.RData", sep=""))
-# hosp_prob3_sp[,,"All"] = hosp_prob3_sp[,,"LIC"] = hosp_prob3_sp[,,"LMIC"] = hosp_prob3_sp[,,"UMIC"] = allpred_Nokes
 
 # ********************************************************
 ## summaries of basic splines in first 6 months -------------
@@ -188,7 +184,7 @@ for (i in 1:4){ # the region
   # } # cycle through hospitalization probability assumptions
 } # cycle through Economic_settings
 
-save(burden, file = paste(plotpre_out, "epicode44a_time_to_perc_cases/burden_results.Rdata", sep=""))
+save(burden, file = paste(plotpre_out, "epicode42/burden_results.Rdata", sep=""))
 
 #******************************************************************
 # Final summaries: global - level analyses ------------------------
@@ -364,12 +360,12 @@ p = ggplot(data=pmm_df,
   scale_x_discrete(limits = rev(levels(pmm_df$outcome))) +
   guides(colour=guide_legend(title = "", title.position="left", reverse=T)) 
 
-ggsave(paste0(plotpre_fig, "epicode44a_time_to_perc_cases/peak_mean_median.eps"), 
+ggsave(paste0(plotpre_fig, "epicode42/peak_mean_median.eps"), 
        plot = grid.draw(p), device="eps", width=7, height=7.5, units="in")
 
 
 #******************************************************************
-# Combination of the global analyses and the country-level model --
+# Combination of the global analyses and the country-level model ----
 #******************************************************************
 # Adapted from code by Lander Willem to leverage
 # the incidence from Shi et al

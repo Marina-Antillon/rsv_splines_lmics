@@ -71,6 +71,7 @@ load(paste(plotpre_out_hinc, "epicode12a_hospinc/hospinc_lmic_predictions.RData"
 load(paste(plotpre_out_hinc, "epicode12a_hospinc/hospinc_umic_predictions.RData", sep=""))
 hospinc_sp[,,"All"] = hospinc_sp[,,"LIC"] = hospinc_sp[,,"LMIC"] = hospinc_sp[,,"UMIC"] = allpred/1000
 
+
 # hospinc_sp[,,"All"] = allpred/1000
 # hospinc_sp[,,"LIC"] = allpred_lic/1000
 # hospinc_sp[,,"LMIC"] = allpred_lmic/1000
@@ -399,7 +400,7 @@ p = ggplot(data=pmm_df,
                      minor_breaks = seq(6, 30, 12)) + 
   guides(colour=guide_legend(title = "", title.position="left", reverse=T)) 
 
-ggsave(paste(plotpre_fig, "epicode44b_time_to_perc_cases_supp/peak_mean_median_restricted_hosp_assume", i, ".eps", sep=""), 
+ggsave(paste(plotpre_fig, "epicode44b_time_to_perc_cases_supp/peak_mean_median_restricted.eps", sep=""), 
        plot = grid.draw(p), device="eps", width=7, height=8.5, units="in")
 
 

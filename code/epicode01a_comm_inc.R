@@ -7,7 +7,7 @@
 #*******************************
 ## Make directories ------------
 ## to store output if it 
-## doesn't already exist
+## doesn't already exist.
 #*******************************
 
 if (!dir.exists(file.path(paste(plotpre_fig, "epicode01a_comm_inc", sep="")))){
@@ -29,11 +29,10 @@ for (i in 1:22){
 }
 
 # rbind them together to make into a data.frame.
-
 data_long = data_list[[7]]
 data_long = data_long[is.na(data_long$Cases),]
 
-for (i in 1:22){
+for (i in c(1:22)){
 data_long = rbind.fill(data_long, data_list[[i]])
 }
 
@@ -104,8 +103,8 @@ data_long_min_all = data_long_min # to graph the studies that were excluded from
 data_long_min = data_long_min[data_long_min$study_no %in% as.numeric(names(table(data_long_min$study_no)))[table(data_long_min$study_no)>2],]
 data_long_min_all = data_long_min_all[data_long_min_all$study_no %in% as.numeric(names(table(data_long_min_all$study_no)))[table(data_long_min_all$study_no)<3],]
 
-write.csv(data_long_min, paste(plotpre_out, "/data_long_inc_train.csv"))
-write.csv(data_long_min_all, paste(plotpre_out, "./data_long_inc_val.csv"))
+write.csv(data_long_min, "./data_long_inc_train.csv")
+write.csv(data_long_min_all, "./data_long_inc_val.csv")
 
 # data_long_min$study_no = as.numeric(as.factor(data_long_min$study_no))
 data_long_min$study_no = factor(as.numeric(as.factor(data_long_min$study_no)))
@@ -132,6 +131,8 @@ b_gamm = gamm4(Cases~s(log(midpoint), k=-1, m=2, bs=bs_type) +
                  t2(log(midpoint), study_no, m=2, bs=c(bs_type, 're'), by=dummy)+offset(log(Pop)),
                random=~(1|study_no), data=data_long_min, family=poisson, REML=T)
 
+check_overdispersion(b_gamm$mer) # overdispersion detected, but not from the preferred model below.
+check_zeroinflation(b_gamm$mer)
 # v_gamm = gamm4(Cases~s(log(midpoint), k=-1, bs=bs_type, m=2, by=Economic_Setting) + Economic_Setting + 
 #                  t2(log(midpoint), study_no, m=2, bs=c(bs_type,"re"), by=dummy)+offset(log(Pop)),
 #                random=~(1|study_no), data=data_long_min[data_long_min$right<25,], family=poisson)
@@ -144,16 +145,23 @@ v_gamm = gamm4(Cases~s(log(midpoint), k=-1, bs=bs_type, m=2, by=Economic_Setting
                  t2(log(midpoint), study_no, m=2, bs=c(bs_type,"re"), by=dummy)+offset(log(Pop)),
                random=~(1|study_no), data=data_long_min, family=poisson)
 
+check_overdispersion(v_gamm$mer) # no overdispersion detected
+check_zeroinflation(v_gamm$mer) # predicts 8 out of 9 zeros. Good enough for us.
+
 v_gamm_nat= gamm4(Cases~s(midpoint, k=-1, bs=bs_type, m=2, by=Economic_Setting) + Economic_Setting +
                  t2(midpoint, study_no, m=2, bs=c(bs_type,"re"), by=dummy)+offset(log(Pop)),
                random=~(1|study_no), data=data_long_min, family=poisson)
+
+check_overdispersion(v_gamm_nat$mer)
 
 v1_gamm = gamm4(Cases~s(log(midpoint), k=-1, bs=bs_type, m=2, by=Economic_Setting) + Economic_Setting + 
                  t2(log(midpoint), study_no, m=2, bs=c(bs_type,"re"), by=Economic_Setting)+offset(log(Pop)),
                random=~(Economic_Setting|study_no), data=data_long_min, family=poisson)
 
+check_overdispersion(v1_gamm$mer) # no overdispersion detected
+
 modcomp = anova(v_gamm$mer, b_gamm$mer, v1_gamm$mer)
-write.csv(modcomp, file=paste(plotpre_out, "epicode01a_comm_inc/modcomp.csv", sep=""))
+write.csv(modcomp, file=paste(plotpre_out, "epicode02_inc/modcomp.csv", sep=""))
 
 newpred=data.frame(midpoint=seq(0.1, 60, 0.1), Pop=rep(1000, length(seq(0.1, 60, 0.1))),
                    study_no=3, dummy=0)
@@ -189,8 +197,8 @@ allpred_df_global = data.frame(pred=as.vector(allpred[seq(5, 595, 10),]),
                                mos=rep(seq(0.5, 59.5, 1), times=dim(allpred)[2]),
                                iter=rep(1:dim(allpred)[2], each=length(seq(0.5, 59.5, 1))))
 
-write.csv(allpred_df_global, file=paste(plotpre_out, "epicode01a_comm_inc/inc_global_predictions.csv", sep=""))
-save(allpred_df_global, allpred, file=paste(plotpre_out, "epicode01a_comm_inc/inc_global_predictions.Rdata", sep=""))
+write.csv(allpred_df_global, file=paste(plotpre_out, "epicode02_inc/inc_global_predictions.csv", sep=""))
+save(allpred_df_global, allpred, file=paste(plotpre_out, "epicode02_inc/inc_global_predictions.Rdata", sep=""))
 
 #*******************************
 # Plot, Global estimates -------
@@ -460,36 +468,6 @@ ggplot(data=data_long_min_all[data_long_min_all$Economic_Setting=="Lower middle 
                 breaks=c(0.1, 1, 10, 100, 1000),
                 labels=scales::comma) 
 dev.off()
-
-# jpeg(filename = paste(plotpre_fig, "epicode01a_comm_inc/inc_lic_fit_obs_val.jpeg", sep=""), 
-#      width = 3, height = 2.5, units = "in", # pointsize = 12,
-#      quality = 100, bg = "white", res = 600)
-# ggplot(data=data_long_min_all[data_long_min_all$Economic_Setting=="Low income",], 
-#        aes(x=midpoint, y=inc)) + themebar2 +
-#   geom_line(data=allpred_df_global[allpred_df_global$iter %in% 1:300,], aes(x=mos, y=pred, group=iter), col="rosybrown2", alpha=0.15) + 
-#   geom_line(data=allpred_df_lmic[allpred_df_lmic$iter %in% 1:300,], aes(x=mos, y=pred, group=iter), col="lightskyblue", alpha=0.09) + 
-#   geom_point(size=1) + facet_wrap(~Title, ncol=4) + 
-#   scale_x_continuous(limits = c(0, 60), breaks=seq(0,60,12)) +
-#   geom_errorbar(aes(x=midpoint, y=inc, ymin=inc_lci, ymax=inc_hci), width=.25) + 
-#   xlab("Age in months") + ylab("Cases per 1,000 person-years") + 
-#   scale_y_continuous(limits = c(0, 1000)) 
-# dev.off()
-
-# jpeg(filename = paste(plotpre_fig, "epicode01a_comm_inc/inc_lic_fit_obs_log10_val.jpeg", sep=""), 
-#      width = 3, height = 2.5, units = "in", # pointsize = 12,
-#      quality = 100, bg = "white", res = 600)
-# ggplot(data=data_long_min_all[data_long_min_all$Economic_Setting=="Low income",], 
-#        aes(x=midpoint, y=inc)) + themebar2 +
-#   theme(panel.grid.minor =  element_blank()) +
-#   geom_line(data=allpred_df_global[allpred_df_global$iter %in% 1:300,], aes(x=mos, y=pred+0.1, group=iter), col="rosybrown2", alpha=0.15) + 
-#   geom_line(data=allpred_df_lmic[allpred_df_lmic$iter %in% 1:300,], aes(x=mos, y=pred+0.1, group=iter), col="lightskyblue", alpha=0.09) + 
-#   geom_point(size=1) + facet_wrap(~Title, ncol=4) + 
-#   scale_x_continuous(limits = c(0, 60), breaks=seq(0,60,12)) +
-#   geom_errorbar(aes(x=midpoint, ymin=inc_lci, ymax=inc_hci), width=.25) + 
-#   xlab("Age in months") + ylab("Cases per 1,000 person-years") + 
-#   scale_y_log10(limits = c(0.1, 1000), breaks=c(0.1, 1, 10, 100, 1000),
-#                      labels=scales::comma) 
-# dev.off()
 
 #*******************************
 # Ribbon plots -----------------

@@ -32,7 +32,7 @@ for (i in 1:52){
 data_long = data_list[[41]]
 data_long = data_long[is.na(data_long$Cases),]
 
-for (i in 1:52){
+for (i in c(1:52)){
   data_long = rbind.fill(data_long, data_list[[i]])
 }
 
@@ -90,6 +90,10 @@ data_long$Economic_Setting = factor(data_long$Economic_Setting)
 # data_long$Economic_Setting = factor(as.character(data_long$Economic_Setting), levels(data_long$Economic_Setting)[c(3,1,2)])
 levels(data_long$Economic_Setting)
 
+data_long$Economic_setting2 = as.character(data_long$Economic_Setting)
+data_long$Economic_setting2[data_long$Economic_setting2=="Lower income"] = "Lower middle income"
+data_long$Economic_setting2 = factor(data_long$Economic_setting2)
+
 ######################
 ## calculate incidence and CIs
 ######################
@@ -114,7 +118,7 @@ data_long_min_all = data_long_min # to graph the studies that were excluded from
 data_long_min = data_long_min[data_long_min$study_no %in% as.numeric(names(table(data_long_min$study_no)))[table(data_long_min$study_no)>2],]
 data_long_min_all = data_long_min_all[data_long_min_all$study_no %in% as.numeric(names(table(data_long_min_all$study_no)))[table(data_long_min_all$study_no)<3],]
 
-write.csv(data_long_min, paste(plotpre_out, "/data_long_hospinc_train.csv"))
+write.csv(data_long_min, paste(plotpre_out, "./data_long_hospinc_train.csv"))
 write.csv(data_long_min_all, paste(plotpre_out, "./data_long_hospinc_val.csv"))
 
 data_long_min$study_no = factor(as.numeric(as.factor(data_long_min$study_no)))
@@ -142,18 +146,43 @@ data_long_min$dummy=1
 
 b_gamm = gamm4(Cases~s(log(midpoint), k=-1, bs=bs_type) +
                  t2(log(midpoint), study_no, bs=c(bs_type, 're'), by=dummy)+offset(log(Pop)),
-               random=~(1|study_no), data=data_long_min, family=poisson, REML=T)
+               random=~(1|study_no), data=data_long_min, family=negbin(theta = 10, link = "log"), REML=T)
 
-v_gamm = gamm4(Cases~s(log(midpoint), k=-1, bs=bs_type, by=Economic_Setting) + Economic_Setting + 
+as.numeric(logLik(b_gamm$mer))
+check_overdispersion(b_gamm$mer) # overdispersion not detected
+gam.check(b_gamm$gam)
+
+v_gamm = gamm4(Cases~s(log(midpoint), k=-1, bs=bs_type, by=Economic_Setting) + Economic_Setting +
                  t2(log(midpoint), study_no, bs=c(bs_type, 're'), by=dummy)+offset(log(Pop)),
-               random=~(1|study_no), data=data_long_min, family=poisson, REML=T)
+               random=~(1|study_no), data=data_long_min, family=negbin(theta = 10, link = "log"), REML=T)
 
-v1_gamm = gamm4(Cases~s(log(midpoint), k=-1, bs=bs_type, by=Economic_Setting) + Economic_Setting + 
-                 t2(log(midpoint), study_no, bs=c(bs_type, 're'), by=Economic_Setting)+offset(log(Pop)),
-               random=~(Economic_Setting|study_no), data=data_long_min, family=poisson, REML=T)
+as.numeric(logLik(v_gamm$mer))
+check_overdispersion(v_gamm$mer) 
 
-modcomp = anova(v_gamm$mer, b_gamm$mer, v1_gamm$mer)
+v1_gamm = gamm4(Cases~s(log(midpoint), k=-1, bs=bs_type, by=Economic_Setting) + Economic_Setting +
+                  t2(log(midpoint), study_no, bs=c(bs_type, 're'), by=Economic_Setting)+offset(log(Pop)),
+                random=~(Economic_Setting|study_no), data=data_long_min, family=negbin(theta = 10, link = "log"), REML=T)
+
+as.numeric(logLik(v1_gamm$mer))
+
+check_overdispersion(v1_gamm$mer) # overdispersion detected
+check_zeroinflation(v1_gamm$mer)
+gam.check(v1_gamm$gam)
+
+modcomp = anova(b_gamm$mer, v_gamm$mer, v1_gamm$mer)
 write.csv(modcomp, file=paste(plotpre_out, "epicode12a_hospinc/modcomp.csv", sep=""))
+
+# Combined LIC and LMIC 
+v_gamm_comb = gamm4(Cases~s(log(midpoint), k=-1, bs=bs_type, by=Economic_setting2) + Economic_setting2 +
+                 t2(log(midpoint), study_no, bs=c(bs_type, 're'), by=dummy)+offset(log(Pop)),
+               random=~(1|study_no), data=data_long_min, family=negbin(theta = 10, link = "log"), REML=T)
+
+v1_gamm_comb = gamm4(Cases~s(log(midpoint), k=-1, bs=bs_type, by=Economic_setting2) + Economic_setting2 +
+                  t2(log(midpoint), study_no, bs=c(bs_type, 're'), by=Economic_setting2)+offset(log(Pop)),
+                random=~(Economic_setting2|study_no), data=data_long_min, family=negbin(theta = 10, link = "log"), REML=T)
+
+modcomp_comb = anova(b_gamm$mer, v_gamm_comb$mer, v1_gamm_comb$mer)
+write.csv(modcomp_comb , file=paste(plotpre_out, "epicode12a_hospinc/modcomp_comb.csv", sep=""))
 
 newpred=data.frame(midpoint=seq(0.1, 60, 0.1), Pop=1000, study_no=1, dummy=0)
 bpred = data.frame(predict.gam(b_gamm$gam, newdata=newpred, se.fit=T))
@@ -180,7 +209,7 @@ b_gamm$gam$Vc
 somebetas = rmvnorm(n=n_iter, coef(b_gamm$gam), b_gamm$gam$Vp)
 someiterates = (tmp %*% t(somebetas))
 allpred = exp(someiterates)*1000
-matplot(seq(0.1, 60, 0.1), allpred, type="l", ylim=c(0, 1000), lty=1, col=rgb(0,0,0,alpha=0.01))
+matplot(seq(0.1, 60, 0.1), allpred, type="l", ylim=c(0, 100), lty=1, col=rgb(0,0,0,alpha=0.01))
 points(data_long_min$midpoint, data_long_min$inc, pch=20, col="red")
 
 allpred_df_global = data.frame(pred=as.vector(allpred[seq(5, 595, 10),]), 
@@ -251,77 +280,6 @@ print(ggplot(data=data_long_min[data_long_min$Title %in% unique(data_long_min$Ti
         scale_y_log10(limits = c(0.1, 1000), breaks=c(0.1, 1, 10, 100, 1000), 
                       labels = c("0.1", "1", "10", "100", "1,000")))
 dev.off()
-
-# *************************
-# By Economic Setting -----
-# Final analysis showed econ setting was not a significant predictor
-# *************************
-# tmp = rev(unique(data_long_min[,c("Economic_Setting")]))
-# newdata = data.frame(midpoint=rep(seq(0.1, 60, 0.1), 3), 
-#                      Pop=rep(1000, length(seq(0.1, 60, 0.1))*3),
-#                      Economic_Setting = rep(tmp, each=length(seq(0.1, 60, 0.1))),
-#                      study_no=2, dummy=0)
-# vpred = data.frame(predict.gam(v1_gamm$gam, newdata=newdata, se.fit=T))
-# vpred$lfit = vpred$fit-1.96*vpred$se.fit
-# vpred$ufit = vpred$fit+1.96*vpred$se.fit
-# 
-# vpred=cbind(newdata, vpred)
-# 
-# par(mfrow=c(1,3))
-# matplot(vpred$midpoint[vpred$Economic_Setting=="Lower income"],
-#         exp(as.matrix(vpred[vpred$Economic_Setting=="Lower income",c("fit", "lfit", "ufit")])),
-#         ylim=c(0, 100), type="l", lty=1)
-# # points(data_long_min$midpoint[data_long_min$Economic_Setting=="Lower income"],
-# #        data_long_min$inc[data_long_min$Economic_Setting=="Lower income"], pch=20)
-# 
-# matplot(vpred$midpoint[vpred$Economic_Setting=="Lower middle income"],
-#         exp(as.matrix(vpred[vpred$Economic_Setting=="Lower middle income", c("fit", "lfit", "ufit")])),
-#         ylim=c(0, 100), type="l", lty=1)
-# # points(data_long_min$midpoint[data_long_min$Economic_Setting=="Lower middle income"],
-# #        data_long_min$inc[data_long_min$Economic_Setting=="Lower middle income"], pch=20)
-# 
-# matplot(vpred$midpoint[vpred$Economic_Setting=="Upper middle income"],
-#         exp(as.matrix(vpred[vpred$Economic_Setting=="Upper middle income", c("fit", "lfit", "ufit")])),
-#         ylim=c(0, 100), type="l", lty=1)
-# # points(data_long_min$midpoint[data_long_min$Economic_Setting=="Upper middle income"],
-# #        data_long_min$inc[data_long_min$Economic_Setting=="Upper middle income"], pch=20)
-# 
-# par(mfrow=c(1,1))
-# 
-# # this predicts the basis at new values
-# keepspline=!str_detect(names(coef(v1_gamm$gam)), "study_no") # keep splines of main effect but not the study-specific effect
-# tmp=predict.gam(v1_gamm$gam, newdata=newdata, type="lpmatrix")[,keepspline]
-# somebetas = rmvnorm(n=n_iter, coef(v1_gamm$gam)[keepspline], v1_gamm$gam$Vp[keepspline,keepspline])
-# someiterates = (tmp %*% t(somebetas))
-# 
-# allpred_lic = exp(someiterates[newdata$Economic_Setting=="Lower income",])*1000
-# allpred_lmic = exp(someiterates[newdata$Economic_Setting=="Lower middle income",])*1000
-# allpred_umic = exp(someiterates[newdata$Economic_Setting=="Upper middle income",])*1000
-# 
-# par(mfrow=c(1,3))
-# matplot(seq(0.1, 60, 0.1), allpred_lic, type="l", lty = 1, col=rgb(0,0,0,alpha=.05), ylim=c(0, 500))
-# matplot(seq(0.1, 60, 0.1), allpred_lmic, type="l", lty = 1, col=rgb(0,0,0,alpha=.05), ylim=c(0, 500))
-# matplot(seq(0.1, 60, 0.1), allpred_umic, type="l", lty = 1, col=rgb(0,0,0,alpha=.05), ylim=c(0, 500))
-# 
-# par(mfrow=c(1,1))
-# 
-# allpred_df_lic = data.frame(pred=as.vector(allpred_lic[seq(5, 595, 10),]), 
-#                              mos=rep(seq(0.5, 59.5, 1), times=dim(allpred_lic)[2]), 
-#                              iter=rep(1:dim(allpred_lic)[2], each=length(seq(0.5, 59.5, 1))))
-# allpred_df_lmic = data.frame(pred=as.vector(allpred_lmic[seq(5, 595, 10),]), 
-#                              mos=rep(seq(0.5, 59.5, 1), times=dim(allpred_lmic)[2]), 
-#                              iter=rep(1:dim(allpred_lmic)[2], each=length(seq(0.5, 59.5, 1))))
-# allpred_df_umic = data.frame(pred=as.vector(allpred_umic[seq(5, 595, 10),]), 
-#                              mos=rep(seq(0.5, 59.5, 1), times=dim(allpred_umic)[2]), 
-#                              iter=rep(1:dim(allpred_umic)[2], each=length(seq(0.5, 59.5, 1))))
-# 
-# write.csv(allpred_df_lic, file=paste(plotpre_out, "epicode14_hospinc/hospinc_lic_predictions.csv", sep=""))
-# write.csv(allpred_df_lmic, file=paste(plotpre_out, "epicode14_hospinc/hospinc_lmic_predictions.csv", sep=""))
-# write.csv(allpred_df_umic, file=paste(plotpre_out, "epicode14_hospinc/hospinc_umic_predictions.csv", sep=""))
-# 
-# save(allpred_lic, allpred_df_lic, file=paste(plotpre_out, "epicode14_hospinc/hospinc_lic_predictions.Rdata", sep=""))
-# save(allpred_lmic, allpred_df_lmic, file=paste(plotpre_out, "epicode14_hospinc/hospinc_lmic_predictions.Rdata", sep=""))
-# save(allpred_umic, allpred_df_umic, file=paste(plotpre_out, "epicode14_hospinc/hospinc_umic_predictions.Rdata", sep=""))
 
 # *************************
 # Plots, fit vs obs ---
@@ -571,31 +529,6 @@ dev.off()
 # *************************
 ## Ribbon plots --------
 # *************************
-
-# Final analysis showed econ setting was not a significant predictor
-# columns: lowci, hici, mos, econ
-# tmp1 = data.frame(t(apply(allpred_lic, 1, quantile, c(0.5, 0.025, 0.975))))
-# colnames(tmp1) = c("est", "lowci", "hici")
-# tmp1$mean = apply(allpred_lmic, 1, mean)
-# tmp1$Economic_setting = "Lower income"
-# tmp2 = data.frame(t(apply(allpred_lmic, 1, quantile, c(0.5, 0.025, 0.975))))
-# colnames(tmp2) = c("est", "lowci", "hici")
-# tmp2$mean = apply(allpred_lmic, 1, mean)
-# tmp2$Economic_setting = "Lower middle income"
-# tmp3 = data.frame(t(apply(allpred_umic, 1, quantile, c(0.5, 0.025, 0.975))))
-# colnames(tmp3) = c("est", "lowci", "hici")
-# tmp3$mean = apply(allpred_umic, 1, mean)
-# tmp3$Economic_setting = "Upper middle income"
-
-# hinc_ribbons = rbind(tmp1, tmp2, tmp3) # rbind(tmp1, tmp2, tmp3, tmp4)
-# hinc_ribbons$mos = rep(seq(0.1, 60, 0.1), times=3)
-# hinc_ribbons$Economic_setting = factor(hinc_ribbons$Economic_setting)
-# hinc_ribbons$est[hinc_ribbons$est<0.1] = 0.1
-# hinc_ribbons$mean[hinc_ribbons$mean<0.1] = 0.1
-# hinc_ribbons$lowci[hinc_ribbons$lowci<0.1] = 0.1
-# hinc_ribbons$est[hinc_ribbons$est>1000] = 1000
-# hinc_ribbons$hici[hinc_ribbons$hici>1000] = 1000
-# hinc_ribbons$mean[hinc_ribbons$mean>1000] = 1000
 
 hinc_ribbons_global = data.frame(t(apply(allpred, 1, quantile, c(0.5, 0.025, 0.975))))
 colnames(hinc_ribbons_global) = c("est", "lowci", "hici")

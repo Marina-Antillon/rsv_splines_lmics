@@ -20,9 +20,12 @@ if (!dir.exists(file.path("out_sims"))){
   dir.create(file.path("out_sims"))
 }
 
-#************************************
-## 01 - incidence splines ---------
-#************************************
+#******************************************************************
+## 01 - incidence splines -----------------------------------------
+#******************************************************************
+
+## epicode01_inc_summaries.R attempts to remake Shi's Table S9.
+## it might not work exactly right now.
 
 rm(list=ls())
 midpt_sensitivity = F
@@ -34,10 +37,10 @@ n_iter = 5000
 set.seed(20190118)
 source("./code/epicode01a_comm_inc.R", print.eval = T)
 
-#************************************
-## 01B - severity in community studies ---
-# as probability of all cases -- severe and very severe
-#************************************
+#*********************************************************************
+## 01B - severity, as probability of all cases -----------------------
+# severe and very severe
+#*********************************************************************
 rm(list=ls())
 midpt_sensitivity = F
 plotpre_out = "./out_sims/"
@@ -166,7 +169,7 @@ set.seed(20190118)
 a=Sys.time()
 source("./code/epicode43_bring_in_pop.R")
 source("./code/epicode44a_time_to_perc_cases.R", print.eval = T) 
-  # because of large arrays being saved, it takes more than 2.973 minutes to run
+# because of large arrays being saved, it takes more than 2.973 minutes to run
 b=Sys.time()
 
 save(peak, meanage, age50p, # burden, 
@@ -198,6 +201,24 @@ save(peak, meanage, age50p,
 # country_incomegroup, country_global, burden That resolves some RAM issues.
 
 #******************************************************************
+## Results: Percentage potentially averted by products of different durations ----
+#******************************************************************
+
+rm(list=ls())
+midpt_sensitivity = F
+plotpre_out = "./out_raw_data/"
+plotpre_fig = "./fig_raw_data/"
+plotpre_out_hinc = "./out_raw_data/"
+source("./epicode/epicode00b_config.R")
+n_iter = 5000
+set.seed(20190118)
+a=Sys.time()
+source("./epicode/epicode43_bring_in_pop.R")
+
+paste(plotpre_out, "epicode44a_time_to_perc_cases/burden_results2.Rdata", sep="")
+source("./epicode/epicode44c_stacked_bar_burden.R", print.eval = T) 
+
+#******************************************************************
 ## 45 Results: Burden in UMICs, LMICs, and LICs ----------------------
 #******************************************************************
 
@@ -211,7 +232,7 @@ load(paste0(plotpre_out, "epicode44a_time_to_perc_cases/burden_results.Rdata"))
 load(paste0(plotpre_out, "epicode44a_time_to_perc_cases/burden_results2.Rdata"))
 n_iter = 5000
 set.seed(20190118)
-source("./code/epicode42_bring_in_pop.R")
+source("./code/epicode43_bring_in_pop.R")
 
 if (!dir.exists(file.path(paste(plotpre_out, "epicode45_burden_calculations", sep="")))){
   dir.create(file.path(paste(plotpre_out, "epicode45_burden_calculations", sep="")))}

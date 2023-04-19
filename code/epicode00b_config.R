@@ -14,6 +14,7 @@ library(stringr)
 library(mgcv) # you want function gam. THERE's an issue with the R 4.1.1
 # here's the error: *** recursive gc invocation
 library(splines)
+library(performance) # to check overdispersion and zero-inflation.
 library(MASS) # for fitdistr()
 library(mvtnorm)
 library(meta)
@@ -25,14 +26,15 @@ library(epitools)
 library(RColorBrewer)
 library(abind)
 library(openxlsx)
+# library(readxl)
 
-# to center titles among plots in ggplot.
 library(magrittr)
-library(gtable)
+library(gtable) # to center titles among plots in ggplot.
+
 
 # related to country populations
 library(countrycode)
-library(wpp2017)
+library(wpp2019)
 
 ################################
 # USEFUL FUNCTIONS
@@ -56,12 +58,6 @@ if (!dir.exists(file.path("./", "out_raw_data"))){
 }
 if (!dir.exists(file.path("./", "fig_raw_data"))){
   dir.create(file.path("./", "fig_raw_data"))
-}
-if (!dir.exists(file.path("./", "out_raw_data_sensitivity"))){
-  dir.create(file.path("./", "out_raw_data_sensitivity"))
-}
-if (!dir.exists(file.path("./", "fig_raw_data_sensitivity"))){
-  dir.create(file.path("./", "fig_raw_data_sensitivity"))
 }
 
 
