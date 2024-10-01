@@ -1,7 +1,7 @@
 The age profile of respiratory syncytial virus burden in pre-school children of low- and middle-income countries: A semi-parametric, meta-regression approach
 =======================
 
-On behalf of the Respiratory Syncytial Virus in Europe ([RESC-EU](https://resc-eu.org))  
+On behalf of the Respiratory Syncytial Virus in Europe ([RESC-EU](https://resc-eu.org)) consortium.
 
 Administered by Marina Antillon, PhD.  
 
