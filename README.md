@@ -90,9 +90,9 @@ epicode47_country_specific_estimates: This makes country-specific estimates of c
 ---
 # Computational considerations
 
-The tools for the analysis are coded in R. While we would highly recommend using the code within RStudio environment (in part because of it's features to manage the project with .RProj and packrat) this is not strictly necessary and the benefits of git and packrat are available from a classic R interface and a shell command line.
+The tools for the analysis are coded in R. While we would highly recommend using the code within RStudio environment (in part because of its features to manage the project with .RProj and packrat) this is not strictly necessary and the benefits of git and renv are available from a classic R interface and a shell command line.
 
-Some of the results tables for the project are produced automatically with the code in the project. This is done via the knitr and kableExtra packages. See the help links later in this document for more information.
+Some of the results tables for the project are produced automatically with the code in the project. This is done by employing the knitr and kableExtra packages. 
 
 A single run of the code takes about 60 minutes in a MacBook Air (M1 chip, 2020 model) with 16 GB of RAM. 
 
